@@ -1,0 +1,22 @@
+En el trabajo, se observa que al mover el potenciómetro, se regula el ciclo
+de trabajo del PWM. La placa, toma valores analógios del ADC,
+que tienen un tamaño de 12 bits, y los convierte a valores analógicos de 16 bits,
+con el fin de regular el ciclo de trabajo del PWM en función del valor leído en el potenciómetro.
+
+
+void task_pwm_update(void *parameters)
+{
+
+	static uint16_t period=PERIOD;
+	static int16_t step = STEP;
+
+	shared_data_type *shared_data = (shared_data_type *) parameters;
+
+	if ( shared_data->adc_end_of_conversion ) {
+		shared_data->adc_end_of_conversion = false;
+		uint16_t adc_val = shared_data->adc_value; // Se obtiene el valor analógico del ADC
+		uint16_t new_duty = adc_val * 65535 / 4095; // Se convierte el valor del ADC a un valor equivalente en la palabra de 16 bits para el PWM
+		setPWM(htim3, TIM_CHANNEL_1, period, new_duty); // Se setea el nuevo duty cycle como tiempo activo del PWM
+		shared_data->pwm_active = new_duty; // Se actualiza el nuevo duty_cycle
+	}
+}
